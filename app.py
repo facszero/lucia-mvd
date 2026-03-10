@@ -339,34 +339,40 @@ def score_to_color(score: float) -> str:
 
 # ── Componentes de visualización ──────────────────────────────────────────────
 def build_risk_map(df: pd.DataFrame, franja: str) -> folium.Map:
-    """Construye mapa Folium con heatmap y marcadores de riesgo."""
+    """Construye mapa Folium con grilla de riesgo enmascarada al territorio de Montevideo."""
     df_f = df[df["franja_horaria"] == franja].copy()
 
-    # Centro en Montevideo
+    # Centro y zoom calibrados para mostrar Montevideo completa
     m = folium.Map(
-        location=[-34.900, -56.180],
+        location=[-34.872, -56.165],
         zoom_start=12,
         tiles="CartoDB.DarkMatter",
         prefer_canvas=True,
+        min_zoom=11,
+        max_zoom=16,
     )
 
-    # Agregar rectángulos coloreados por score
-    # Solo mostrar celdas con riesgo medio o superior para no saturar
-    df_vis = df_f[df_f["nivel_riesgo"].isin(["Medio", "Alto", "Crítico"])].copy()
+    # Ajustar bounds automáticamente al territorio
+    m.fit_bounds([[-34.940, -56.300], [-34.820, -56.030]])
 
-    for _, row in df_vis.iterrows():
+    # Mostrar TODAS las celdas (Bajo con opacidad mínima para dar contexto urbano)
+    nivel_opacity_base = {"Bajo": 0.08, "Medio": 0.35, "Alto": 0.65, "Crítico": 0.90}
+
+    for _, row in df_f.iterrows():
+        nivel = row["nivel_riesgo"]
         color = score_to_color(row["score_riesgo"])
-        opacity = 0.25 + 0.55 * (row["score_riesgo"] / 100)
-        cell_half = 0.003  # mitad de la celda en grados
+        base_op = nivel_opacity_base.get(nivel, 0.3)
+        opacity = base_op + 0.10 * (row["score_riesgo"] / 100)
+        cell_half = 0.003
 
         folium.Rectangle(
             bounds=[
                 [row["lat_cen"] - cell_half, row["lon_cen"] - cell_half],
                 [row["lat_cen"] + cell_half, row["lon_cen"] + cell_half],
             ],
-            color=color,
+            color=color if nivel != "Bajo" else "#22C55E",
             fill=True,
-            fill_color=color,
+            fill_color=color if nivel != "Bajo" else "#22C55E",
             fill_opacity=opacity,
             weight=0,
             tooltip=folium.Tooltip(

@@ -17,7 +17,8 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, Polygon, MultiPolygon
+from shapely.ops import unary_union
 from scipy.spatial import cKDTree
 from sklearn.preprocessing import MinMaxScaler
 
@@ -34,6 +35,32 @@ MVD_BOUNDS = {
     "lon_min": -56.300, "lon_max": -56.030,
 }
 
+# Polígono de tierra de Montevideo (excluye Río de la Plata y Bahía)
+# Coordenadas: (lon, lat) - borde costero aproximado del departamento
+MVD_LAND_COORDS = [
+    # Límite norte (departamental) W → E
+    (-56.300, -34.820),
+    (-56.030, -34.820),
+    # Costa este - bajando hacia Carrasco
+    (-56.030, -34.858),
+    (-56.045, -34.872),  # Punta Gorda / Carrasco
+    (-56.065, -34.888),
+    (-56.090, -34.898),  # Buceo / Malvín
+    (-56.120, -34.908),  # Pocitos
+    (-56.150, -34.915),  # Punta Carretas
+    (-56.175, -34.918),  # Playa Ramírez
+    (-56.195, -34.915),  # Parque Rodó
+    (-56.215, -34.910),  # Puerto / Ciudad Vieja
+    (-56.235, -34.905),
+    (-56.255, -34.900),  # Cerro interior
+    (-56.270, -34.895),
+    (-56.290, -34.892),  # Cerro oeste
+    (-56.300, -34.890),  # Límite oeste
+    # Cierre al norte
+    (-56.300, -34.820),
+]
+MVD_LAND_POLYGON = Polygon(MVD_LAND_COORDS)
+
 # Ponderaciones del score final (suma = 1.0)
 PESOS = {
     "violencia_observada":     0.35,
@@ -48,8 +75,10 @@ FRANJAS = ["Mañana (6-12h)", "Tarde (12-19h)", "Noche (19-24h)", "Madrugada (0-
 
 def build_grid(cell_size_deg: float = 0.006) -> gpd.GeoDataFrame:
     """
-    Construye grilla cuadrada sobre Montevideo.
+    Construye grilla cuadrada sobre Montevideo, enmascarada al polígono de tierra.
     cell_size_deg ≈ 0.006° ≈ 560m en latitud (resolución análisis urbano).
+    Las celdas cuyo centroide cae en el Río de la Plata o fuera del límite
+    departamental son excluidas.
     """
     lats = np.arange(MVD_BOUNDS["lat_min"], MVD_BOUNDS["lat_max"], cell_size_deg)
     lons = np.arange(MVD_BOUNDS["lon_min"], MVD_BOUNDS["lon_max"], cell_size_deg)
@@ -64,6 +93,10 @@ def build_grid(cell_size_deg: float = 0.006) -> gpd.GeoDataFrame:
                 (lon + cell_size_deg, lat + cell_size_deg),
                 (lon, lat + cell_size_deg),
             ])
+            centroid = Point(lon + cell_size_deg / 2, lat + cell_size_deg / 2)
+            # Excluir celdas fuera del polígono de tierra de Montevideo
+            if not MVD_LAND_POLYGON.contains(centroid):
+                continue
             cells.append({
                 "cell_id": cell_id,
                 "geometry": poly,
@@ -73,7 +106,9 @@ def build_grid(cell_size_deg: float = 0.006) -> gpd.GeoDataFrame:
             cell_id += 1
 
     gdf = gpd.GeoDataFrame(cells, crs="EPSG:4326")
-    log.info(f"Grilla creada: {len(gdf):,} celdas ({cell_size_deg*111:.0f}m × {cell_size_deg*111:.0f}m)")
+    # Re-indexar cell_id secuencialmente
+    gdf["cell_id"] = range(len(gdf))
+    log.info(f"Grilla creada: {len(gdf):,} celdas terrestres ({cell_size_deg*111:.0f}m × {cell_size_deg*111:.0f}m)")
     return gdf
 
 
