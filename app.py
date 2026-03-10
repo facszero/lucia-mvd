@@ -685,7 +685,7 @@ def main():
         <b style='color:#6C63FF;'>Datos:</b> DNPG/Ministerio del Interior, STM, INE, IMM<br>
         <b style='color:#6C63FF;'>Modelo:</b> XGBoost + SHAP (Accuracy: 93.4%)<br>
         <b style='color:#6C63FF;'>Período:</b> 2023 (calibrado con 43.245 denuncias)<br>
-        <b style='color:#6C63FF;'>Celdas:</b> 900 (~560m × 560m)<br><br>
+        <b style='color:#6C63FF;'>Celdas:</b> 608 (~560m × 560m, solo tierra)<br><br>
         <i>Los datos de denuncias son sintéticos calibrados con estadísticas oficiales reales del DNPG.</i>
         </div>
         """, unsafe_allow_html=True)
@@ -788,7 +788,8 @@ def main():
             ]
 
             if len(df_barrio_franja) > 0:
-                row = df_barrio_franja.iloc[0]
+                # Usar la celda de mayor score como representativa del barrio
+                row = df_barrio_franja.loc[df_barrio_franja["score_riesgo"].idxmax()]
                 score = row["score_riesgo"]
                 nivel = row["nivel_riesgo"]
                 color = get_risk_color_hex(nivel)

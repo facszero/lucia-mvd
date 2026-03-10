@@ -119,7 +119,6 @@ def train_model(df: pd.DataFrame) -> dict:
         learning_rate=0.08,
         subsample=0.85,
         colsample_bytree=0.85,
-        use_label_encoder=False,
         eval_metric="mlogloss",
         random_state=42,
         verbosity=0,

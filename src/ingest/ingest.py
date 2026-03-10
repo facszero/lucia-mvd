@@ -502,6 +502,22 @@ def run_ingestion(force_synthetic: bool = True) -> dict:
     datasets["censo"] = generate_synthetic_censo()
     log.info("✓ Censo: datos socioeconómicos generados")
 
+    # ── Filtrar VDA fuera del bounding box de Montevideo ─────────────────────
+    if "vda" in datasets:
+        vda = datasets["vda"]
+        n_before = len(vda)
+        MVD_LAT = (-34.950, -34.810)
+        MVD_LON = (-56.320, -56.010)
+        mask = (
+            vda["lat"].between(*MVD_LAT) &
+            vda["lon"].between(*MVD_LON)
+        )
+        datasets["vda"] = vda[mask].copy()
+        n_drop = n_before - len(datasets["vda"])
+        if n_drop > 0:
+            log.warning(f"VDA: {n_drop:,} registros fuera del bbox eliminados "
+                        f"({n_drop/n_before*100:.1f}%)")
+
     # ── Guardar en disco ─────────────────────────────────────────────────────
     for name, df in datasets.items():
         path = SYN_DIR / f"{name}.parquet"
