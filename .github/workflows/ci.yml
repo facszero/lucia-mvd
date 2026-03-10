@@ -1,0 +1,95 @@
+name: LUCÍA-MVD CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test Pipeline
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgdal-dev libgeos-dev libproj-dev
+    
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run pipeline
+      run: python run_pipeline.py
+    
+    - name: Validate outputs
+      run: |
+        python -c "
+        import pandas as pd
+        from pathlib import Path
+        
+        # Check processed data exists
+        assert Path('data/processed/features_completo.parquet').exists()
+        assert Path('data/processed/dataset_scored.parquet').exists()
+        assert Path('outputs/models/xgb_lucia.pkl').exists()
+        
+        # Check data quality
+        df = pd.read_parquet('data/processed/dataset_scored.parquet')
+        assert len(df) == 3600, f'Expected 3600 rows, got {len(df)}'
+        assert 'score_riesgo' in df.columns
+        assert df['score_riesgo'].between(0, 100).all()
+        assert df['nivel_riesgo'].isin(['Bajo','Medio','Alto','Crítico']).all()
+        
+        print('✓ All validations passed')
+        print(f'  Rows: {len(df):,}')
+        print(f'  Score range: {df.score_riesgo.min():.1f} - {df.score_riesgo.max():.1f}')
+        print(f'  Risk levels: {df.nivel_riesgo.value_counts().to_dict()}')
+        "
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: lucia-mvd-outputs
+        path: |
+          data/processed/
+          outputs/models/
+        retention-days: 7
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    
+    - name: Install linting tools
+      run: pip install flake8
+    
+    - name: Run flake8
+      run: |
+        flake8 src/ --max-line-length=120 --ignore=E501,W503,E203 --count --statistics
+      continue-on-error: true
