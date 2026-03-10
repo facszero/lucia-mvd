@@ -1,21 +1,41 @@
-geopandas>=0.14.0
-folium>=0.15.0
-streamlit>=1.32.0
-streamlit-folium>=0.18.0
-plotly>=5.18.0
-pandas>=2.0.0
-numpy>=1.24.0
-scikit-learn>=1.3.0
-xgboost>=2.0.0
-shap>=0.44.0
-requests>=2.31.0
-shapely>=2.0.0
-pyproj>=3.6.0
-branca>=0.7.0
-scipy>=1.11.0
-statsmodels>=0.14.0
-matplotlib>=3.7.0
-seaborn>=0.13.0
-openpyxl>=3.1.0
-xlrd>=2.0.1
-Pillow>=10.0.0
+# LUCÍA-MVD — Requirements for Streamlit Cloud
+# Python 3.11 compatible, versions pinned for stability
+
+# Core data
+pandas==2.1.4
+numpy==1.26.4
+pyarrow==14.0.2
+
+# Geospatial
+geopandas==0.14.3
+shapely==2.0.3
+pyproj==3.6.1
+fiona==1.9.5
+
+# Machine Learning
+scikit-learn==1.4.0
+xgboost==2.0.3
+shap==0.44.1
+
+# Statistics
+scipy==1.12.0
+statsmodels==0.14.1
+
+# Visualization
+plotly==5.18.0
+folium==0.15.1
+streamlit-folium==0.18.0
+matplotlib==3.8.2
+seaborn==0.13.2
+
+# Web / HTTP
+requests==2.31.0
+branca==0.7.1
+jinja2==3.1.3
+
+# App
+streamlit==1.32.0
+
+# File formats
+openpyxl==3.1.2
+Pillow==10.2.0

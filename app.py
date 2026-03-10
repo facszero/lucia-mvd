@@ -289,7 +289,8 @@ def load_scored_data():
     path = PROC_DIR / "dataset_scored.parquet"
     if path.exists():
         return pd.read_parquet(path)
-    # Si no existe, ejecutar pipeline completo
+    # Pipeline completo automático si no existen los datos
+    st.info("⚙️ Generando datos por primera vez... (~15 segundos)")
     from ingest.ingest import run_ingestion
     from features.features import run_feature_engineering
     from modeling.model import run_modeling, score_full_dataset
