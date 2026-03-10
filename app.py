@@ -350,9 +350,12 @@ def score_to_opacity(score: float) -> float:
 
 
 # ── Componentes de visualización ──────────────────────────────────────────────
-def build_risk_map(df: pd.DataFrame, franja: str) -> folium.Map:
+def build_risk_map(df: pd.DataFrame, franja: str, niveles_filtro: list = None) -> folium.Map:
     """Construye mapa Folium con grilla de riesgo enmascarada al territorio de Montevideo."""
     df_f = df[df["franja_horaria"] == franja].copy()
+    # Aplicar filtro de niveles del sidebar (todos si no se especifica)
+    if niveles_filtro:
+        df_f = df_f[df_f["nivel_riesgo"].isin(niveles_filtro)]
 
     # Centro y zoom calibrados para mostrar Montevideo completa
     m = folium.Map(
@@ -680,7 +683,7 @@ def main():
         <div style='color:#7C85A8;font-size:0.82rem;line-height:1.6;'>
         Sistema de estimación de riesgo urbano diferencial para mujeres.<br><br>
         <b style='color:#6C63FF;'>Datos:</b> DNPG/Ministerio del Interior, STM, INE, IMM<br>
-        <b style='color:#6C63FF;'>Modelo:</b> XGBoost + SHAP (Accuracy: 95%)<br>
+        <b style='color:#6C63FF;'>Modelo:</b> XGBoost + SHAP (Accuracy: 93.4%)<br>
         <b style='color:#6C63FF;'>Período:</b> 2023 (calibrado con 43.245 denuncias)<br>
         <b style='color:#6C63FF;'>Celdas:</b> 900 (~560m × 560m)<br><br>
         <i>Los datos de denuncias son sintéticos calibrados con estadísticas oficiales reales del DNPG.</i>
@@ -725,7 +728,7 @@ def main():
             st.markdown(f"""<div class='section-title'>
             {FRANJAS_ICONS[franja]} Mapa de Riesgo — {franja}</div>""",
             unsafe_allow_html=True)
-            mapa = build_risk_map(df, franja)
+            mapa = build_risk_map(df, franja, niveles_filtro=niveles_sel)
             st_folium(mapa, width=None, height=520, returned_objects=[])
 
         with col_panel:
@@ -859,11 +862,11 @@ def main():
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            kpi_card("95.0%", "Accuracy XGBoost", color="#22C55E")
+            kpi_card("93.4%", "Accuracy XGBoost", color="#22C55E")
         with col2:
-            kpi_card("95.0%", "F1-Score Weighted", color="#22C55E")
+            kpi_card("93.4%", "F1-Score Weighted", color="#22C55E")
         with col3:
-            kpi_card("91.8%", "Accuracy RF Baseline", color="#F59E0B")
+            kpi_card("90.1%", "Accuracy RF Baseline", color="#F59E0B")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -889,7 +892,7 @@ def main():
             Índice ponderado de 5 dimensiones que combina datos históricos, movilidad y entorno urbano.<br><br>
 
             <b style='color:#6C63FF;'>2. XGBoost (clasificador)</b><br>
-            Clasifica cada celda en 4 niveles de riesgo usando 13 features. Entrenado sobre 3.600 observaciones celda×franja.<br><br>
+            Clasifica cada celda en 4 niveles de riesgo usando 13 features. Entrenado sobre 2.432 observaciones celda×franja (608 celdas × 4 franjas).<br><br>
 
             <b style='color:#6C63FF;'>3. SHAP (explicabilidad)</b><br>
             Para cada celda se calcula la contribución de cada feature a la predicción. Esto permite identificar QUÉ intervención reducirá el riesgo.<br><br>
@@ -1205,7 +1208,7 @@ def main():
         🛡️ <b>LUCÍA-MVD</b> &nbsp;·&nbsp; ONU Mujeres DAT4CCIÓN 2026 &nbsp;·&nbsp;
         Montevideo, Uruguay &nbsp;·&nbsp;
         Datos: DNPG/Ministerio del Interior · STM · INE · IMM &nbsp;·&nbsp;
-        Modelo: XGBoost + SHAP (Accuracy 95%) &nbsp;·&nbsp;
+        Modelo: XGBoost + SHAP (Accuracy 93.4%) &nbsp;·&nbsp;
         <a href='https://github.com/facszero/lucia-mvd' style='color:#6C63FF;text-decoration:none;'>
         GitHub</a>
     </div>

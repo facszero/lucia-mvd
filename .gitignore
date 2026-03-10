@@ -41,3 +41,4 @@ Thumbs.db
 
 # Cache
 .pytest_cache/
+*.pptx

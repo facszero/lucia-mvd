@@ -53,7 +53,10 @@ jobs:
         
         # Check data quality
         df = pd.read_parquet('data/processed/dataset_scored.parquet')
-        assert len(df) == 3600, f'Expected 3600 rows, got {len(df)}'
+        assert len(df) > 0, f'Dataset vacío'
+        assert len(df) % 4 == 0, f'Debe ser múltiplo de 4 franjas, got {len(df)}'
+        n_celdas = len(df) // 4
+        assert 500 <= n_celdas <= 1000, f'Celdas fuera de rango esperado: {n_celdas}'
         assert 'score_riesgo' in df.columns
         assert df['score_riesgo'].between(0, 100).all()
         assert df['nivel_riesgo'].isin(['Bajo','Medio','Alto','Crítico']).all()
