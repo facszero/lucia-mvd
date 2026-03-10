@@ -8,6 +8,7 @@ Autor: Equipo LUCÍA-MVD
 Contacto: dat4ccion@lucia-mvd.uy
 """
 
+import math
 import sys
 import os
 import warnings
@@ -343,7 +344,6 @@ def score_to_opacity(score: float) -> float:
     Evita saltos visuales bruscos al cambiar de franja horaria.
     Usa curva sigmoide centrada en score=45: rango 0.06..0.82
     """
-    import math
     normalized = (float(score) - 45.0) / 18.0
     sigmoid = 1.0 / (1.0 + math.exp(-normalized))
     return round(0.06 + sigmoid * 0.76, 3)
@@ -360,14 +360,13 @@ def build_risk_map(df: pd.DataFrame, franja: str, niveles_filtro: list = None) -
     # Centro y zoom calibrados para mostrar Montevideo completa
     m = folium.Map(
         location=[-34.872, -56.165],
-        zoom_start=12,
         tiles="CartoDB.DarkMatter",
         prefer_canvas=True,
         min_zoom=11,
         max_zoom=16,
     )
 
-    # Ajustar bounds automáticamente al territorio
+    # fit_bounds define el encuadre inicial (controla zoom, zoom_start sería ignorado)
     m.fit_bounds([[-34.940, -56.300], [-34.820, -56.030]])
 
     # Opacidad continua basada en score (evita saltos visuales entre franjas horarias)
@@ -1016,12 +1015,14 @@ def main():
 
                     btn_simular = st.button("⚡ Simular intervención", type="primary",
                                             use_container_width=True)
+                else:
+                    btn_simular = False
 
             with col_result:
                 st.markdown("<div class='section-title'>📈 Resultado de la Simulación</div>",
                             unsafe_allow_html=True)
 
-                if len(df_sim) > 0 and "btn_simular" in dir() and btn_simular:
+                if len(df_sim) > 0 and btn_simular:
                     from modeling.model import simulate_intervention, FEATURE_COLS
 
                     intervenciones = {

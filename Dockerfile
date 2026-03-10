@@ -6,9 +6,10 @@ LABEL version="1.0.0"
 
 # Install system dependencies for geopandas
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgdal-dev \
     libgeos-dev \
     libproj-dev \
+    proj-data \
+    proj-bin \
     gcc \
     g++ \
     && apt-get clean \
