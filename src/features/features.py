@@ -36,26 +36,29 @@ MVD_BOUNDS = {
 }
 
 # Polígono de tierra de Montevideo (excluye Río de la Plata y Bahía)
-# Coordenadas: (lon, lat) - borde costero aproximado del departamento
+# Coordenadas: (lon, lat) - borde costero del departamento
+# v2: costa sur extendida para incluir Pocitos, Punta Carretas y Parque Rodó
 MVD_LAND_COORDS = [
     # Límite norte (departamental) W → E
     (-56.300, -34.820),
     (-56.030, -34.820),
     # Costa este - bajando hacia Carrasco
     (-56.030, -34.858),
-    (-56.045, -34.872),  # Punta Gorda / Carrasco
+    (-56.045, -34.872),   # Punta Gorda / Carrasco
     (-56.065, -34.888),
-    (-56.090, -34.898),  # Buceo / Malvín
-    (-56.120, -34.908),  # Pocitos
-    (-56.150, -34.915),  # Punta Carretas
-    (-56.175, -34.918),  # Playa Ramírez
-    (-56.195, -34.915),  # Parque Rodó
-    (-56.215, -34.910),  # Puerto / Ciudad Vieja
-    (-56.235, -34.905),
-    (-56.255, -34.900),  # Cerro interior
-    (-56.270, -34.895),
-    (-56.290, -34.892),  # Cerro oeste
-    (-56.300, -34.890),  # Límite oeste
+    (-56.090, -34.900),   # Buceo / Malvín
+    (-56.110, -34.912),   # Pocitos norte
+    (-56.130, -34.918),   # Pocitos
+    (-56.148, -34.924),   # Punta Carretas (punta del promontorio)
+    (-56.162, -34.922),   # entre Punta Carretas y Parque Rodó
+    (-56.178, -34.920),   # Playa Ramírez
+    (-56.200, -34.918),   # Parque Rodó oeste
+    (-56.215, -34.915),   # Ciudad Vieja este
+    (-56.232, -34.912),   # Ciudad Vieja
+    (-56.250, -34.908),   # La Aguada / borde bahía
+    (-56.265, -34.902),
+    (-56.285, -34.896),   # Cerro
+    (-56.300, -34.893),   # Límite oeste
     # Cierre al norte
     (-56.300, -34.820),
 ]
