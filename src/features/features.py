@@ -207,12 +207,26 @@ def compute_transport_features(stm_df: pd.DataFrame, grid: gpd.GeoDataFrame) -> 
 
 def compute_social_features(censo_df: pd.DataFrame, grid: gpd.GeoDataFrame) -> pd.DataFrame:
     """Asigna features socioeconómicas a la grilla por proximidad al centroide de barrio."""
-    censo_coords = censo_df[["lat_centroide", "lon_centroide"]].values
-    tree = cKDTree(censo_coords)
+    # Escalar coordenadas a km antes del KDTree para evitar distorsión lon vs lat.
+    # A lat ≈ -34.9°: 1°lat=111km, 1°lon=111*cos(-34.9°)≈91km.
+    # Sin corrección, el eje lon queda "comprimido" y el vecino más cercano puede
+    # ser incorrecto para barrios que difieren más en longitud que en latitud.
+    import math
+    COS_LAT = math.cos(math.radians(-34.9))
+    LAT_KM  = 111.0
+    LON_KM  = 111.0 * COS_LAT
+
+    censo_km = censo_df[["lat_centroide", "lon_centroide"]].copy()
+    censo_km_vals = np.column_stack([
+        censo_df["lat_centroide"].values * LAT_KM,
+        censo_df["lon_centroide"].values * LON_KM,
+    ])
+    tree = cKDTree(censo_km_vals)
 
     records = []
     for _, row in grid.iterrows():
-        dist, idx = tree.query([row.lat_cen, row.lon_cen], k=1)
+        query_km = [row.lat_cen * LAT_KM, row.lon_cen * LON_KM]
+        dist, idx = tree.query(query_km, k=1)
         barrio_data = censo_df.iloc[idx]
 
         records.append({
@@ -506,12 +520,21 @@ def run_feature_engineering() -> pd.DataFrame:
     df["top_factores"] = df.apply(top_3_factors, axis=1)
     df["recomendacion"] = df.apply(intervention_recommendation, axis=1)
 
-    # Agregar info de barrio (join por cercanía centroide)
+    # Agregar info de barrio (join por cercanía centroide, distancias en km)
     from scipy.spatial import cKDTree as KDTree
-    censo_coords = censo[["lat_centroide", "lon_centroide"]].values
-    tree = KDTree(censo_coords)
-    cell_coords = df[["lat_cen", "lon_cen"]].values
-    _, indices = tree.query(cell_coords, k=1)
+    import math as _math
+    _COS = _math.cos(_math.radians(-34.9))
+    _LAT_KM, _LON_KM = 111.0, 111.0 * _COS
+    censo_km = np.column_stack([
+        censo["lat_centroide"].values * _LAT_KM,
+        censo["lon_centroide"].values * _LON_KM,
+    ])
+    cell_km = np.column_stack([
+        df["lat_cen"].values * _LAT_KM,
+        df["lon_cen"].values * _LON_KM,
+    ])
+    tree = KDTree(censo_km)
+    _, indices = tree.query(cell_km, k=1)
     df["barrio"] = censo.iloc[indices]["barrio"].values
 
     # Guardar
