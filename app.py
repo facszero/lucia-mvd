@@ -342,11 +342,13 @@ def score_to_opacity(score: float) -> float:
     """
     Opacidad continua basada en score 0-100.
     Evita saltos visuales bruscos al cambiar de franja horaria.
-    Usa curva sigmoide centrada en score=45: rango 0.06..0.82
+    Usa curva sigmoide centrada en score=45.
+    Piso elevado a 0.18 para garantizar visibilidad sobre fondo oscuro.
+    Rango efectivo: score=0→0.23, score=25→0.33, score=45→0.50, score=75→0.69
     """
     normalized = (float(score) - 45.0) / 18.0
     sigmoid = 1.0 / (1.0 + math.exp(-normalized))
-    return round(0.06 + sigmoid * 0.76, 3)
+    return round(0.18 + sigmoid * 0.64, 3)
 
 
 # ── Componentes de visualización ──────────────────────────────────────────────
@@ -385,7 +387,8 @@ def build_risk_map(df: pd.DataFrame, franja: str, niveles_filtro: list = None) -
             fill=True,
             fill_color=color,
             fill_opacity=opacity,
-            weight=0,
+            weight=0.4,
+            opacity=max(opacity, 0.35),
             tooltip=folium.Tooltip(
                 f"""
                 <div style='font-family:sans-serif;font-size:13px;background:#1C2035;
