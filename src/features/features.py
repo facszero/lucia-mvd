@@ -31,18 +31,19 @@ PROC_DIR.mkdir(parents=True, exist_ok=True)
 
 # Bounding box de Montevideo
 MVD_BOUNDS = {
-    "lat_min": -34.940, "lat_max": -34.820,
+    "lat_min": -34.940, "lat_max": -34.795,  # extendido al norte (hasta Ruta 102)
     "lon_min": -56.300, "lon_max": -56.010,  # extendido al este (Carrasco)
 }
 
 # Polígono de tierra de Montevideo (excluye Río de la Plata y Bahía)
 # Coordenadas: (lon, lat) - borde costero del departamento
-# v3: borde este extendido para incluir Carrasco, Parque Miramar y Punta Gorda
+# v4: borde norte extendido hasta lat -34.795 (límite departamental / Ruta 102)
+#     borde este cubre Carrasco, Parque Miramar y Punta Gorda
 #     El aeropuerto queda excluido (interior, al norte de la costa residencial)
 MVD_LAND_COORDS = [
-    # Límite norte (departamental) W → E
-    (-56.300, -34.820),
-    (-56.028, -34.820),   # borde norte extendido hasta Carrasco Norte
+    # Límite norte (departamental) W → E — hasta Ruta 102
+    (-56.300, -34.795),
+    (-56.028, -34.795),
     # Borde este — sigue costa de Carrasco hacia el sur
     (-56.020, -34.832),   # Playa La Mansa norte
     (-56.018, -34.846),   # La Mansa
@@ -51,7 +52,7 @@ MVD_LAND_COORDS = [
     (-56.045, -34.891),   # Parque Miramar
     (-56.068, -34.900),   # Punta Gorda norte
     (-56.080, -34.912),   # Punta Gorda sur
-    # Costa sur — sin cambios respecto a v2
+    # Costa sur — sin cambios respecto a v2/v3
     (-56.090, -34.900),   # Bañados de Carrasco / Buceo
     (-56.110, -34.912),   # Pocitos norte
     (-56.130, -34.918),   # Pocitos
@@ -66,7 +67,7 @@ MVD_LAND_COORDS = [
     (-56.285, -34.896),   # Cerro
     (-56.300, -34.893),   # Límite oeste
     # Cierre al norte
-    (-56.300, -34.820),
+    (-56.300, -34.795),
 ]
 MVD_LAND_POLYGON = Polygon(MVD_LAND_COORDS)
 
